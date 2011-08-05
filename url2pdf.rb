@@ -95,11 +95,11 @@ class URL2PDF
   end
 end
 
-def combine_pdfs(directory, filename)
+def combine_pdfs(paths, filename)
     final_pdf = PDFDocument.alloc.init
 
-    Dir[File.expand_path(File.join(directory, '*.pdf'))].each do |file|
-        url = NSURL.fileURLWithPath file
+    Array(paths).each do |file|
+        url = NSURL.fileURLWithPath File.expand_path(file)
         current_pdf = PDFDocument.alloc.initWithURL url
         unless current_pdf
             puts "Couldn't open #{url.absoluteString}"

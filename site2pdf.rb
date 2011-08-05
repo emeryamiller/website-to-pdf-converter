@@ -31,17 +31,16 @@ require 'rubygems'
 require 'mechanize'
 require 'set'
 require 'fileutils'
+require 'tempfile'
 
 class Converter
     def initialize(url)
         @convert = URL2PDF.new
-        @filename = nil 
-        @algorithm = nil
-        @pdfs_path = File.expand_path("~/pdf")
-        @workflow_path = File.join(File.dirname(__FILE__), "combine_pdfs.workflow")
-
+        @tmpdir = File.join(Dir.tmpdir, 'pdfs')
+        @pdf_files = []
         @url = url
         @algorithm = :site_by_urls if @url.kind_of?(Array)
+        FileUtils.makedirs @tmpdir
     end
 
     def to(filename)
@@ -81,15 +80,15 @@ class Converter
         valid
     end
 
+    private
+
     def site_by_link_(first_url, link_function)
        links = Set.new
        a = Mechanize.new { |agent| agent.user_agent_alias = 'Mac Safari' }
        next_link = first_url
-       index = -1
        while next_link && links.add?(next_link)
-          index+=1
           p = a.get(next_link) 
-          @convert.save(next_link, File.join(@pdfs_path, "temp#{"%04d" % index}.pdf"))
+          @convert.save(next_link, next_tempfile)
           link = link_function.call(p) 
           if link
               p = link.click
@@ -107,20 +106,26 @@ class Converter
     end
 
     def site_by_url_index
-       @range.each_with_index do |value, index|
-           @convert.save(@url.gsub(@replacement, value.to_s), File.join(@pdfs_path, "temp#{"%04d" % index}.pdf"))
+       @range.each do |value|
+           @convert.save(@url.gsub(@replacement, value.to_s), next_tempfile)
        end
     end
 
     def site_by_urls
-        @url.each_with_index {|url, index| @convert.save(url, File.join(@pdfs_path, "temp#{"%04d" % index}.pdf")) }
+        @url.each {|url, index| @convert.save(url, next_tempfile) }
     end
 
     def combine
-        combine_pdfs(@pdfs_path, @filename)
-        FileUtils.rm Dir[File.join(@pdfs_path, "*")]
+        combine_pdfs(@pdf_files.map(&:path), @filename)
+        @pdf_files.map(&:unlink)
     end
 
+    def next_tempfile
+      tmpfile = Tempfile.new(['converter', '.pdf'], @tmpdir)
+      tmpfile.close
+      @pdf_files << tmpfile
+      tmpfile.path
+    end
 end
 
 def convert(url)
