@@ -27,12 +27,11 @@ Can be called as follows:
 ##Requirements:
 - Mac OS X Snow Leopard and above 
 - Macruby (> 0.10 - current head)
-- Automator - the combine method uses automator to combine the downloaded pdfs into one
-- ~/pdfs directory - this is where the pdfs are created and combined
 
 ##Thanks:
 
-Thanks to Tom Ward's blog [post][screenshots] on taking screenshots with MacRuby and Brad Miller's [post][cocoa_pdfs] on creating PDF's in Cocoa. I combined these two approaches, and added the mechanize layer to navigate a site.
+Thanks to Tom Ward's blog [post][screenshots] on taking screenshots with MacRuby, David Palm's [post][macruby_pdfs] on creating pdfs in macruby, and Brad Miller's [post][cocoa_pdfs] on creating PDF's in Cocoa. I combined these approaches, and added the mechanize layer to navigate a site.
 
 [screenshots]: http://tomafro.net/2009/11/taking-screenshots-of-web-pages-with-macruby
 [cocoa_pdfs]: http://cocoadevcentral.com/articles/000074.php
+[macruby_pdfs]: http://web.elctech.com/2009/09/18/creating-pdfs-with-macruby
