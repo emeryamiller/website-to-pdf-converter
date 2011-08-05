@@ -1,5 +1,6 @@
 framework 'Cocoa'
 framework 'WebKit'
+framework 'Quartz'
 
 class URL2PDF
   attr_accessor :options, :view, :window
@@ -94,3 +95,19 @@ class URL2PDF
   end
 end
 
+def combine_pdfs(directory, filename)
+    final_pdf = PDFDocument.alloc.init
+
+    Dir[File.expand_path(File.join(directory, '*.pdf'))].each do |file|
+        url = NSURL.fileURLWithPath file
+        current_pdf = PDFDocument.alloc.initWithURL url
+        unless current_pdf
+            puts "Couldn't open #{url.absoluteString}"
+            next
+        end
+        (0...current_pdf.pageCount).each do |index|
+            final_pdf.insertPage(current_pdf.pageAtIndex(index), atIndex:final_pdf.pageCount)
+        end
+    end
+    final_pdf.writeToFile(File.expand_path(filename))
+end

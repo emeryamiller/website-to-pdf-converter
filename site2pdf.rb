@@ -30,19 +30,22 @@ require 'url2pdf'
 require 'rubygems'
 require 'mechanize'
 require 'set'
+require 'fileutils'
 
 class Converter
     def initialize(url)
         @convert = URL2PDF.new
         @filename = nil 
         @algorithm = nil
+        @pdfs_path = File.expand_path("~/pdf")
+        @workflow_path = File.join(File.dirname(__FILE__), "combine_pdfs.workflow")
 
         @url = url
         @algorithm = :site_by_urls if @url.kind_of?(Array)
     end
 
     def to(filename)
-        @filename = filename
+        @filename = File.expand_path(filename)
         go if valid?
         self
     end
@@ -65,7 +68,7 @@ class Converter
     end
 
     def go
-        @filename ||= "converted.pdf"
+        @filename ||= File.expand_path("~/converted.pdf")
         self.send(@algorithm)
         combine
     end
@@ -82,11 +85,11 @@ class Converter
        links = Set.new
        a = Mechanize.new { |agent| agent.user_agent_alias = 'Mac Safari' }
        next_link = first_url
-       index = 0
+       index = -1
        while next_link && links.add?(next_link)
           index+=1
           p = a.get(next_link) 
-          @convert.save(next_link, "~/pdf/temp#{"%04d" % index}.pdf")
+          @convert.save(next_link, File.join(@pdfs_path, "temp#{"%04d" % index}.pdf"))
           link = link_function.call(p) 
           if link
               p = link.click
@@ -104,17 +107,18 @@ class Converter
     end
 
     def site_by_url_index
-       @range.each do |index|
-           @convert.save(@url.gsub(@replacement, index.to_s), "~/pdf/temp#{"%04d" % index}.pdf")
+       @range.each_with_index do |value, index|
+           @convert.save(@url.gsub(@replacement, value.to_s), File.join(@pdfs_path, "temp#{"%04d" % index}.pdf"))
        end
     end
 
     def site_by_urls
-        @url.each_with_index {|url, index| @convert.save(url, "~/pdf/temp#{"%04d" % index}.pdf") }
+        @url.each_with_index {|url, index| @convert.save(url, File.join(@pdfs_path, "temp#{"%04d" % index}.pdf")) }
     end
 
     def combine
-        %x[automator -i ~/pdf /Users/emery/Library/Workflows/Custom/combine_pdfs.workflow]
+        combine_pdfs(@pdfs_path, @filename)
+        FileUtils.rm Dir[File.join(@pdfs_path, "*")]
     end
 
 end
