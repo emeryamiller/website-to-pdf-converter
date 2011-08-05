@@ -82,27 +82,26 @@ class Converter
 
     private
 
-    def site_by_link_(first_url, link_function)
+    def site_by_link
        links = Set.new
+       links.add nil #To ensure nil can't be added again
+
+       find_link = @link_def
+       find_link = -> (page) { page.link(text:/#{@link_def}/i) } if @link_def.kind_of?(String)
+
        a = Mechanize.new { |agent| agent.user_agent_alias = 'Mac Safari' }
-       next_link = first_url
-       while next_link && links.add?(next_link)
-          p = a.get(next_link) 
-          @convert.save(next_link, next_tempfile)
-          link = link_function.call(p) 
+       next_url = @url
+       while next_url && links.add?(next_url)
+          p = a.get(next_url) 
+          @convert.save(next_url, next_tempfile)
+
+          next_url = nil
+          link = find_link.call(p) 
           if link
               p = link.click
-              next_link = p.uri.to_s
-          else
-              next_link = nil
+              next_url = p.uri.to_s
           end
        end
-    end
-
-    def site_by_link
-        link_function = @link_def
-        link_function = -> (page) { page.link(text:/#{@link_def}/i) } if @link_def.kind_of?(String)
-        site_by_link_(@url, link_function)
     end
 
     def site_by_url_index
