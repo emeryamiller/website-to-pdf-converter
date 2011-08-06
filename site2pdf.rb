@@ -26,14 +26,17 @@
 #   Macruby (> 0.10 - current head is sufficient)
 #   Automator - the combine method uses automator to combine the downloaded pdfs into one
 
-require 'url2pdf'
 require 'rubygems'
+require 'url2pdf'
+require 'pdfutils'
 require 'mechanize'
 require 'set'
 require 'fileutils'
 require 'tempfile'
 
 class Converter
+    include PDFUtils
+
     def initialize(url)
         @convert = URL2PDF.new
         @tmpdir = File.join(Dir.tmpdir, 'pdfs')
